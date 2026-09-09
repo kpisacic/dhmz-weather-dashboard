@@ -1,0 +1,30 @@
+services:
+  dhmz-weather:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: dhmz-weather
+    ports:
+      - "8080:8000"
+    environment:
+      # Current-conditions station (see README.md for the full list)
+      DHMZ_STATION_NAME: "Zagreb-Maksimir"
+      # Regional forecast text (see README.md for the full list)
+      DHMZ_FORECAST_REGION_NAME: "Zagreb"
+      DHMZ_FORECAST_TEXT: "zg_text"
+      # 7-day/hourly meteogram station (see README.md for the full list)
+      DHMZ_FORECAST_STATION_NAME: "ZAGREB-MAKSIMIR"
+
+      DHMZ_TIMEZONE: "Europe/Zagreb"
+      # DHMZ itself only republishes current conditions/forecast roughly
+      # hourly and the radar composite roughly every 10-15 min, so these are
+      # tuned to avoid re-fetching/re-processing faster than the source
+      # actually changes - the main lever for CPU use on something like a
+      # Raspberry Pi 3B+ (radar re-encoding via Pillow is the expensive part).
+      DHMZ_WEATHER_CACHE_SECONDS: "1800"
+      DHMZ_RADAR_CACHE_SECONDS: "600"
+      DHMZ_MARK_LOCATION: "false"
+      DHMZ_RADAR_FORMAT: "GIF"
+    volumes:
+      - ./data:/data
+    restart: unless-stopped

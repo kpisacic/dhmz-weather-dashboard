@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<title>DHMZ Weather</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="icon-humidity" viewBox="0 0 24 24"><path d="M12 2s6 7.2 6 11.5A6 6 0 0 1 6 13.5C6 9.2 12 2 12 2z"/></symbol>
+      <symbol id="icon-rain" viewBox="0 0 24 24"><path d="M6 14v3M10 14v3M14 14v3M18 14v3M7 10a4 4 0 0 1 .5-7.9A5 5 0 0 1 17 4a3.5 3.5 0 0 1-.6 6.9H7z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+      <symbol id="icon-gauge" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9M12 3v3M3 12h3M18.5 5.5l-2.1 2.1M12 12l4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+      <symbol id="icon-sunrise" viewBox="0 0 24 24"><path d="M12 17V9m-3.5 4.5L12 9l3.5 4.5M3 20h18M5 17a7 7 0 0 1 14 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="icon-wind" viewBox="0 0 24 24"><path d="M3 8h11a2.5 2.5 0 1 0-2.5-2.5M3 12h15a2.5 2.5 0 1 1-2.5 2.5M3 16h9a2 2 0 1 1-2 2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+      <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M12 3v18M12 3l-5 5M12 3l5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    </defs>
+  </svg>
+
+  <div id="app" class="dashboard">
+    <div class="col col-main">
+      <header class="header">
+        <h1 id="station-name">&nbsp;</h1>
+        <span id="updated" class="updated"></span>
+      </header>
+
+      <section class="main">
+        <img id="condition-icon" class="condition-icon" alt="">
+        <div class="temp-block">
+          <div class="temp"><span id="temperature">--</span><sup>&deg;C</sup></div>
+          <div id="condition-text" class="condition-text"></div>
+        </div>
+      </section>
+
+      <section class="attributes">
+        <div class="attr">
+          <div class="attr-line"><svg class="mi"><use href="#icon-humidity"/></svg><span id="humidity">--</span>&nbsp;%</div>
+          <div class="attr-line"><svg class="mi"><use href="#icon-rain"/></svg><span id="precipitation">--</span>&nbsp;mm</div>
+        </div>
+        <div class="attr">
+          <div class="attr-line"><svg class="mi"><use href="#icon-gauge"/></svg><span id="pressure">--</span>&nbsp;hPa <span id="pressure-tendency" class="muted"></span></div>
+          <div class="attr-line attr-sun" id="sun-row" hidden><svg class="mi"><use href="#icon-sunrise"/></svg><span id="sunrise">--:--</span>&nbsp;&ndash;&nbsp;<span id="sunset">--:--</span></div>
+        </div>
+        <div class="attr">
+          <div class="attr-line"><svg class="mi wind-arrow" id="wind-arrow"><use href="#icon-arrow"/></svg><span id="wind-bearing">--</span></div>
+          <div class="attr-line"><svg class="mi"><use href="#icon-wind"/></svg><span id="wind-speed">--</span>&nbsp;m/s</div>
+        </div>
+      </section>
+
+      <section class="forecast-text" id="today-block">
+        <div class="label">Danas</div>
+        <div class="text" id="forecast-today"></div>
+      </section>
+
+      <section class="chart-container">
+        <canvas id="weather-chart"></canvas>
+      </section>
+
+      <section class="forecast-strip" id="forecast-strip"></section>
+
+      <section class="forecast-text" id="tomorrow-block">
+        <div class="label">Sutra</div>
+        <div class="text" id="forecast-tomorrow"></div>
+      </section>
+
+      <footer class="footer">
+        <span>Data provided by DHMZ</span>
+        <span id="status" class="status"></span>
+      </footer>
+    </div>
+
+    <div class="col col-radar">
+      <h2>Radar</h2>
+      <img id="radar-image" class="radar-image" alt="DHMZ radar composite">
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

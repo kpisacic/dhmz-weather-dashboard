@@ -1,0 +1,214 @@
+/* Fixed dark theme - this runs as a dedicated kiosk display, not a general
+   browser page, so it doesn't follow the device's OS light/dark setting. */
+:root {
+  --bg: #14161a;
+  --card-bg: #1e2127;
+  --text: #eef0f3;
+  --muted: #9aa1ac;
+  --divider: rgba(255, 255, 255, 0.12);
+  --accent: #ff6384;
+  --accent-2: #36a2eb;
+  --icon: #b7bec9;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.dashboard {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(280px, 1fr);
+  gap: 20px;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px;
+  min-height: 100vh;
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .dashboard {
+    grid-template-columns: 1fr;
+  }
+}
+
+.col-main, .col-radar {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 24px 28px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.header h1 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.updated, .muted {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.main {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin: 10px 0 20px 0;
+}
+
+.condition-icon {
+  width: 84px;
+  height: 84px;
+  flex: none;
+}
+
+.temp-block {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.temp {
+  font-size: 56px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.temp sup {
+  font-size: 26px;
+  margin-left: 2px;
+}
+
+.condition-text {
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.attributes {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 12px 0 20px 0;
+  padding: 14px 0;
+  border-top: 1px solid var(--divider);
+  border-bottom: 1px solid var(--divider);
+}
+
+.attr {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.attr-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.mi {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: var(--icon);
+  fill: currentColor;
+}
+
+.wind-arrow {
+  transition: transform 0.3s ease;
+}
+
+.forecast-text {
+  margin: 14px 0;
+}
+
+.forecast-text .label {
+  font-weight: 600;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.forecast-text .text {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.forecast-text:empty,
+.forecast-text .text:empty {
+  display: none;
+}
+
+.chart-container {
+  height: 200px;
+  margin: 16px 0;
+}
+
+.forecast-strip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 8px 0 4px 0;
+}
+
+.forecast-strip .fc-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.forecast-strip img {
+  width: 28px;
+  height: 28px;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.status.stale {
+  color: var(--accent);
+}
+
+.col-radar h2 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+}
+
+.radar-image {
+  width: 100%;
+  border-radius: 10px;
+  display: block;
+  background: var(--bg);
+  min-height: 200px;
+}
