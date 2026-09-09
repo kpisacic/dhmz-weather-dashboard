@@ -183,35 +183,62 @@ def fetch_forecast_text(url: str, text_key: str) -> Optional[str]:
 
 
 def fetch_forecast_hourly(forecast_station_name: str) -> Optional[list[dict[str, Any]]]:
-    """Hourly forecast points (several days out) from the 7-day meteogram feed."""
-    root = fetch_xml(FORECAST_7DAYS_API_URL)
-    if root is None:
-        return None
+    """Hourly forecast points (several days out) from the 7-day meteogram feed.
 
-    nodes = root.xpath(f"//sedamdana/grad[@code='{forecast_station_name}']/*")
-    if not nodes:
-        logger.error("Forecast station %r not found in 7d_graf_i_simboli.xml", forecast_station_name)
+    This feed covers all ~330 DHMZ forecast stations in one ~7MB document. A
+    full DOM parse (as fetch_xml() does for the other, much smaller feeds)
+    builds a tree with hundreds of thousands of elements just to read one
+    station's ~168 rows out of it - libxml2's per-element overhead balloons
+    that into 100MB+ of process memory that glibc doesn't hand back to the OS
+    afterward. iterparse() + clearing each <grad> once it's been read keeps
+    only one station's worth of elements in memory at a time.
+    """
+    try:
+        raw = fetch_bytes(FORECAST_7DAYS_API_URL)
+    except (requests.RequestException, OSError) as err:
+        logger.error("Failed to fetch %s: %s", FORECAST_7DAYS_API_URL, err)
         return None
 
     result: list[dict[str, Any]] = []
-    for node in nodes:
-        try:
-            symbol = node.xpath("simbol/text()")[0]
-            tmax = node.xpath("t_2m/text()")[0]
-            wind = node.xpath("vjetar/text()")[0]
-            precip = node.xpath("oborina/text()")[0]
-            when = datetime.strptime(f"{node.get('datum')} {node.get('sat')}", "%d.%m.%Y. %H")
-        except (IndexError, TypeError, ValueError):
-            continue
-        result.append({
-            "datetime": when,
-            "temperature": _safe_float(tmax),
-            "precipitation": _safe_float(precip) or 0.0,
-            "wind_speed": WIND_SPEED_MAPPING.get(int(wind[-1:]), 0) if wind and wind[-1:].isdigit() else None,
-            "wind_bearing": wind[:-1] if wind else None,
-            "condition": format_condition(symbol),
-            "weather_symbol": symbol,
-        })
+    found = False
+    try:
+        context = etree.iterparse(BytesIO(raw), events=("end",), tag="grad", recover=True)
+        for _, grad in context:
+            if grad.get("code") == forecast_station_name:
+                found = True
+                for node in grad:
+                    try:
+                        symbol = node.findtext("simbol")
+                        tmax = node.findtext("t_2m")
+                        wind = node.findtext("vjetar")
+                        precip = node.findtext("oborina")
+                        when = datetime.strptime(f"{node.get('datum')} {node.get('sat')}", "%d.%m.%Y. %H")
+                    except (TypeError, ValueError):
+                        continue
+                    result.append({
+                        "datetime": when,
+                        "temperature": _safe_float(tmax),
+                        "precipitation": _safe_float(precip) or 0.0,
+                        "wind_speed": WIND_SPEED_MAPPING.get(int(wind[-1:]), 0) if wind and wind[-1:].isdigit() else None,
+                        "wind_bearing": wind[:-1] if wind else None,
+                        "condition": format_condition(symbol),
+                        "weather_symbol": symbol,
+                    })
+            # Free this <grad> (and any now-unreferenced preceding siblings)
+            # instead of letting the whole document accumulate in memory.
+            grad.clear()
+            parent = grad.getparent()
+            while parent is not None and grad.getprevious() is not None:
+                del parent[0]
+        del context
+    except etree.XMLSyntaxError as err:
+        logger.error("Failed to parse XML from %s: %s", FORECAST_7DAYS_API_URL, err)
+        return None
+
+    if not found:
+        logger.error("Forecast station %r not found in 7d_graf_i_simboli.xml", forecast_station_name)
+        return None
+
     result.sort(key=lambda e: e["datetime"])
     return result
 
