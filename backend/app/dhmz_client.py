@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import threading
 import time
 from datetime import datetime
@@ -78,10 +79,50 @@ def compass_to_degrees(compass: Optional[str]) -> Optional[int]:
     return COMPASS_TO_DEGREES.get(compass) if compass else None
 
 
+ICON_BASE_URL = "https://meteo.hr/assets/images/icons/"
+
+# All real DHMZ symbol codes are 1-2 digits with an optional "n" (night)
+# suffix - see CONDITION_CLASSES above. Validated before being interpolated
+# into an outbound fetch URL in fetch_icon() below, since that value
+# ultimately comes from a client-facing request path.
+ICON_SYMBOL_RE = re.compile(r"^\d{1,2}n?$")
+
+
 def icon_url(symbol: Optional[str]) -> Optional[str]:
     if not symbol or symbol == "-":
         return None
-    return f"https://meteo.hr/assets/images/icons/{symbol}.svg"
+    return f"{ICON_BASE_URL}{symbol}.svg"
+
+
+_icon_cache_lock = threading.Lock()
+_icon_cache: dict[str, bytes] = {}
+
+
+def fetch_icon(symbol: str) -> Optional[bytes]:
+    """Fetch (and cache forever) one weather-condition icon SVG.
+
+    There are only a few dozen distinct DHMZ symbol codes and the icon for
+    a given code never changes, so - unlike the weather/radar stores - a
+    permanent in-memory cache with no TTL is enough; this only ever does a
+    real network fetch once per distinct symbol for the life of the process.
+    """
+    if not ICON_SYMBOL_RE.match(symbol):
+        return None
+
+    with _icon_cache_lock:
+        cached = _icon_cache.get(symbol)
+    if cached is not None:
+        return cached
+
+    try:
+        data = fetch_bytes(f"{ICON_BASE_URL}{symbol}.svg")
+    except (requests.RequestException, OSError) as err:
+        logger.error("Failed to fetch icon %r: %s", symbol, err)
+        return None
+
+    with _icon_cache_lock:
+        _icon_cache[symbol] = data
+    return data
 
 
 def _safe_float(value: Any) -> Optional[float]:

@@ -19,7 +19,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from . import config
-from .dhmz_client import RadarStore, WeatherStore
+from .dhmz_client import ICON_SYMBOL_RE, RadarStore, WeatherStore, fetch_icon
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger("dhmz")
@@ -101,6 +101,22 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send_binary(
                     HTTPStatus.OK, data, content_type,
                     {"Cache-Control": f"max-age={config.RADAR_CACHE_SECONDS}"},
+                )
+
+            if path.startswith("/api/icon/"):
+                # Proxied+cached same-origin instead of the frontend loading
+                # https://meteo.hr/... icons directly: some Android kiosk
+                # browsers/WebViews whitelist only their own configured
+                # origin and silently block third-party image requests.
+                symbol = path[len("/api/icon/"):].strip("/")
+                if not ICON_SYMBOL_RE.match(symbol):
+                    return self._send_error_json(HTTPStatus.BAD_REQUEST, f"Invalid icon symbol: {symbol!r}")
+                data = fetch_icon(symbol)
+                if data is None:
+                    return self._send_error_json(HTTPStatus.BAD_GATEWAY, f"Icon unavailable: {symbol!r}")
+                return self._send_binary(
+                    HTTPStatus.OK, data, "image/svg+xml",
+                    {"Cache-Control": "public, max-age=604800, immutable"},
                 )
 
             if path == "/api/health":

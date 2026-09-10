@@ -66,6 +66,15 @@
     el.textContent = value === null || value === undefined || value === "" ? "" : value;
   }
 
+  function localIconUrl(symbol) {
+    // Same-origin, proxied+cached by the backend (see /api/icon/<symbol> in
+    // main.py) instead of pointing straight at meteo.hr - some Android
+    // kiosk browsers/WebViews whitelist only their own configured origin
+    // and silently block third-party image requests.
+    if (!symbol || symbol === "-") return null;
+    return `/api/icon/${encodeURIComponent(symbol)}`;
+  }
+
   function render(data) {
     setText(els.stationName, data.station || data.station_name || "DHMZ");
     const updatedDate = parseDhmzTimestamp(data.updated);
@@ -75,8 +84,9 @@
       });
     }
 
-    if (data.icon_url) {
-      els.conditionIcon.src = data.icon_url;
+    const conditionIconSrc = localIconUrl(data.weather_symbol);
+    if (conditionIconSrc) {
+      els.conditionIcon.src = conditionIconSrc;
       els.conditionIcon.style.visibility = "visible";
     } else {
       els.conditionIcon.style.visibility = "hidden";
@@ -131,7 +141,7 @@
       const item = document.createElement("div");
       item.className = "fc-item";
       const img = document.createElement("img");
-      img.src = entry.icon_url || "";
+      img.src = localIconUrl(entry.weather_symbol) || "";
       img.alt = entry.condition || "";
       const label = document.createElement("span");
       label.textContent = new Date(entry.datetime).toLocaleTimeString(LOCALE, {
