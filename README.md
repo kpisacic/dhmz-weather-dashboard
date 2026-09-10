@@ -112,7 +112,7 @@ backend/
   app/
     config.py        # env-var configuration
     dhmz_client.py    # fetch/parse/cache DHMZ feeds, ported from the HA integration
-    main.py           # FastAPI app: /api/weather, /api/radar, serves frontend/
+    main.py           # stdlib http.server app: /api/weather, /api/radar, serves frontend/
   requirements.txt
   Dockerfile
 frontend/

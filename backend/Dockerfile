@@ -24,4 +24,4 @@ EXPOSE 8000
 # ps`, at the cost of spawning a Python interpreter every interval - not
 # worth it on constrained hardware for a non-critical home dashboard.
 
-CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "app.main"]
